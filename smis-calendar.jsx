@@ -1396,6 +1396,7 @@ export default function App() {
     }
   }, []);
   const scrolled = useRef(false);
+  const exactAnchor = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -1490,16 +1491,44 @@ export default function App() {
     return out;
   }, [year]);
 
+  // 桌面端按「页」翻：每周一页（周一–周五）；那周后面有周末卡时，
+  // 额外插一页（周二–周末卡），再往后又回到下周一对齐
+  const pages = useMemo(() => {
+    const out = [];
+    let i = 0;
+    while (i < strip.length) {
+      if (strip[i].kind === "weekendGroup") {
+        i++;
+        continue;
+      }
+      out.push(i);
+      let j = i + 1;
+      while (j < strip.length && strip[j].kind !== "weekendGroup" && strip[j].dow !== 1) j++;
+      if (j < strip.length && strip[j].kind === "weekendGroup") {
+        out.push(Math.max(0, j - 4));
+        j++;
+      }
+      i = j;
+    }
+    return out;
+  }, [strip]);
+
   // 只渲染焦点附近的日子，滑到边缘再延展 —— 全年 176 天一次性渲染在手机上会卡
   const [range, setRange] = useState({ lo: 0, hi: 40 });
 
   useEffect(() => {
     if (!ready || view !== "week" || !strip.length) return;
     const i = strip.findIndex((d) => d.date >= focus);
-    const idx = i < 0 ? Math.max(0, strip.length - 2) : i;
+    let idx = i < 0 ? Math.max(0, strip.length - 2) : i;
+    // 桌面端落点对齐到整周页首；箭头翻页已经给了精确页首，不再重映射
+    if (wide && !exactAnchor.current && pages.length) {
+      const pi = pages.findIndex((x) => idx >= x && idx <= x + 4);
+      if (pi >= 0) idx = pages[pi];
+    }
+    exactAnchor.current = false;
     setRange({ lo: Math.max(0, idx - 8), hi: Math.min(strip.length, idx + 32) });
     scrolled.current = idx;
-  }, [focus, ready, view, strip]);
+  }, [focus, ready, view, strip, wide, pages]);
 
   useEffect(() => {
     if (view !== "week" || typeof scrolled.current !== "number") return;
@@ -1515,16 +1544,28 @@ export default function App() {
     }
   }, [range, view]);
 
-  const scrollPage = useCallback((dir) => {
-    const el = stripRef.current;
-    if (!el) return;
-    const dx = dir * (el.clientWidth || 300);
-    try {
-      el.scrollBy({ left: dx, behavior: "smooth" });
-    } catch {
-      el.scrollLeft += dx;
-    }
-  }, []);
+  const gotoPage = useCallback(
+    (dir) => {
+      const el = stripRef.current;
+      if (!el || !pages.length) return;
+      const w = el.children[0]?.getBoundingClientRect().width || 0;
+      const cur = w ? range.lo + Math.round(el.scrollLeft / (w + 8)) : range.lo;
+
+      let pi = pages.indexOf(cur);
+      if (pi < 0) pi = pages.findIndex((x) => cur >= x && cur <= x + 4);
+      if (pi < 0) {
+        pi = 0;
+        for (let k = 0; k < pages.length; k++) if (pages[k] <= cur) pi = k;
+      }
+      const nx = Math.min(pages.length - 1, Math.max(0, pi + dir));
+      const target = strip[pages[nx]];
+      if (target) {
+        exactAnchor.current = true;
+        setFocus(target.date);
+      }
+    },
+    [pages, strip, range.lo]
+  );
 
   const onStripScroll = useCallback(
     (e) => {
@@ -1710,7 +1751,7 @@ export default function App() {
       {view === "week" ? (
         <div style={{ display: "flex", alignItems: "stretch", gap: 8 }}>
           {wide && (
-            <button onClick={() => scrollPage(-1)} style={arrowBtn} aria-label="前一周">‹</button>
+            <button onClick={() => gotoPage(-1)} style={arrowBtn} aria-label="上一页">‹</button>
           )}
           <div
             ref={stripRef}
@@ -1776,7 +1817,7 @@ export default function App() {
             })}
           </div>
           {wide && (
-            <button onClick={() => scrollPage(1)} style={arrowBtn} aria-label="后一周">›</button>
+            <button onClick={() => gotoPage(1)} style={arrowBtn} aria-label="下一页">›</button>
           )}
         </div>
       ) : (
