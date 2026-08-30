@@ -110,7 +110,7 @@ const DEFAULT_SUBJECTS = {
   ART: { zh: "美术", color: "#C2652A", special: true, prep: ["罩衫"] },
   PE: { zh: "体育", color: "#D93E4A", special: true, prep: ["运动服"] },
   SWIM: { zh: "游泳", color: "#1E9BC4", special: true, prep: ["泳衣", "泳镜", "浴巾"] },
-  LIB: { zh: "图书馆", color: "#7B5EA7", special: true, prep: ["还上次借的书"] },
+  LIB: { zh: "图书馆", color: "#7B5EA7", special: true, prep: ["还书"] },
   MUS: { zh: "音乐", color: "#B8478E", special: true, prep: [] },
   "Home Room / Prayer": { zh: "晨会 / 祈祷", color: C.dim, break: true },
   Recess: { zh: "课间", color: C.dim, break: true },
@@ -168,7 +168,7 @@ const RPY = {
 const DEFAULT_CLASSES = [RPJ, RPY];
 
 // 递增这个数字，下次载入会补进新增的默认班级/科目，但不覆盖你改过的内容
-const SEED = 5;
+const SEED = 6;
 const LABEL_FIXES = {
   "Back to School Day（仅家长）": "Back to School（仅家长）",
   "Parent Teacher Conference（仅家长）": "PTC（仅家长）",
@@ -178,7 +178,7 @@ const LABEL_FIXES = {
   "Student Led & Parent Teacher Conference": "学生主导 PTC",
   "Carnival Recovery Day": "Carnival 补休",
 };
-const RETIRED_PREP = { PE: "运动鞋、运动服、水壶", SWIM: "泳衣、泳帽、泳镜、浴巾" };
+const RETIRED_PREP = { PE: "运动鞋、运动服、水壶", SWIM: "泳衣、泳帽、泳镜、浴巾", LIB: "还上次借的书" };
 
 /* ---------- 日期工具 ---------- */
 
@@ -558,71 +558,59 @@ function WeekendCard({ item, isToday }) {
   );
 }
 
-function PrepBanner({ rec, cls, subjects, today }) {
+function PrepCol({ rec, cls, subjects, today, primary }) {
   const items = prepFor(rec, cls, subjects);
-  if (!rec || rec.classOff) return null;
   const d = parse(rec.date);
+  const tmr = new Date(parse(today));
+  tmr.setDate(tmr.getDate() + 1);
+  const when =
+    rec.date === today ? "今天" : rec.date === iso(tmr) ? "明天" : `${d.getMonth() + 1}/${d.getDate()}（周${WD[d.getDay()]}）`;
+
   return (
-    <div
-      style={{
-        background: C.navy,
-        borderRadius: 10,
-        padding: "10px 12px",
-        color: "#fff",
-        marginBottom: 10,
-      }}
-    >
+    <div style={{ flex: 1, minWidth: 0 }}>
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 5,
-          fontSize: 10,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: C.gold,
-          fontWeight: 700,
-          marginBottom: 6,
+          display: "flex", alignItems: "center", gap: 5, fontSize: 10,
+          letterSpacing: "0.08em", textTransform: "uppercase", color: C.gold,
+          fontWeight: 700, marginBottom: 6, lineHeight: 1.4,
         }}
       >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.gold}
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0 }}
-          aria-hidden="true"
-        >
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-        </svg>
-        {rec.date === today
-          ? `今天要带 · ${rec.letter} day`
-          : `下个上学日要带 · ${d.getMonth() + 1}/${d.getDate()}（周${WD[d.getDay()]}）${rec.letter} day`}
+        {primary && (
+          <svg
+            width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.gold}
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ flexShrink: 0 }} aria-hidden="true"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+          </svg>
+        )}
+        <span style={{ minWidth: 0 }}>{when}要带 · {rec.letter} day</span>
       </div>
+
       {items.length ? (
         items.map((it) => (
-          <div key={it.name} style={{ display: "flex", gap: 8, alignItems: "baseline", marginTop: 3 }}>
-            <span
-              style={{
-                fontSize: 12.5,
-                fontWeight: 700,
-                color: it.color,
-                minWidth: 52,
-                flexShrink: 0,
-              }}
-            >
-              {it.name}
-            </span>
-            <span style={{ fontSize: 13, lineHeight: 1.45 }}>{it.prep.join(" · ")}</span>
+          <div key={it.name} style={{ display: "flex", gap: 7, alignItems: "baseline", marginTop: 3 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: it.color, flexShrink: 0 }}>{it.name}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.45, minWidth: 0 }}>{it.prep.join(" · ")}</span>
           </div>
         ))
       ) : (
-        <div style={{ fontSize: 13, lineHeight: 1.45, opacity: 0.72 }}>没有要特别准备的东西</div>
+        <div style={{ fontSize: 12.5, lineHeight: 1.45, opacity: 0.72 }}>没有要特别准备的东西</div>
+      )}
+    </div>
+  );
+}
+
+function PrepBanner({ rec, next, cls, subjects, today }) {
+  if (!rec || rec.classOff) return null;
+  return (
+    <div style={{ background: C.navy, borderRadius: 10, padding: "10px 12px", color: "#fff", marginBottom: 10, display: "flex", gap: 12 }}>
+      <PrepCol rec={rec} cls={cls} subjects={subjects} today={today} primary />
+      {next && (
+        <div style={{ flex: 1, minWidth: 0, display: "flex", borderLeft: "1px solid rgba(255,255,255,.18)", paddingLeft: 12 }}>
+          <PrepCol rec={next} cls={cls} subjects={subjects} today={today} />
+        </div>
       )}
     </div>
   );
@@ -1609,6 +1597,17 @@ export default function App() {
     [strip, today, nextDay]
   );
 
+  // 提醒条右栏：nextDay 之后的下一个到校日
+  const dayAfter = useMemo(() => {
+    if (!nextDay) return null;
+    for (const d of year.days) {
+      if (d.date <= nextDay.date || d.kind !== "school") continue;
+      const r = dayForClass(d, cls);
+      if (!r.classOff) return r;
+    }
+    return null;
+  }, [year, cls, nextDay]);
+
   const todayRec = year.byDate.get(today);
   const inYear = today >= school.yearStart && today <= school.yearEnd;
 
@@ -1767,7 +1766,7 @@ export default function App() {
         </div>
       )}
 
-      <PrepBanner rec={nextDay} cls={cls} subjects={subjects} today={today} />
+      <PrepBanner rec={nextDay} next={dayAfter} cls={cls} subjects={subjects} today={today} />
 
       {view === "week" ? (
         <div style={{ display: "flex", alignItems: "stretch", gap: 8 }}>
