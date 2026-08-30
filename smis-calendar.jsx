@@ -1386,6 +1386,7 @@ export default function App() {
   const [showSet, setShowSet] = useState(false);
   const fakeToday = useMemo(() => overrideToday(), []);
   const [focus, setFocus] = useState(() => overrideToday() || todayISO());
+  const [jump, setJump] = useState(0);
   const stripRef = useRef(null);
   const wide = useWide();
   const urlClass = useMemo(() => {
@@ -1528,7 +1529,7 @@ export default function App() {
     exactAnchor.current = false;
     setRange({ lo: Math.max(0, idx - 8), hi: Math.min(strip.length, idx + 32) });
     scrolled.current = idx;
-  }, [focus, ready, view, strip, wide, pages]);
+  }, [focus, jump, ready, view, strip, wide, pages]);
 
   useEffect(() => {
     if (view !== "week" || typeof scrolled.current !== "number") return;
@@ -1543,6 +1544,14 @@ export default function App() {
       scrolled.current = null;
     }
   }, [range, view]);
+
+  // 统一的跳转入口。focus 可能和当前值相同（例如反复点「回到今天」），
+  // 所以另外用一个计数器强制触发 effect。
+  const goToDate = useCallback((d, exact) => {
+    exactAnchor.current = !!exact;
+    setFocus(d);
+    setJump((j) => j + 1);
+  }, []);
 
   const gotoPage = useCallback(
     (dir) => {
@@ -1559,12 +1568,9 @@ export default function App() {
       }
       const nx = Math.min(pages.length - 1, Math.max(0, pi + dir));
       const target = strip[pages[nx]];
-      if (target) {
-        exactAnchor.current = true;
-        setFocus(target.date);
-      }
+      if (target) goToDate(target.date, true);
     },
-    [pages, strip, range.lo]
+    [pages, strip, range.lo, goToDate]
   );
 
   const onStripScroll = useCallback(
@@ -1677,7 +1683,7 @@ export default function App() {
           ))}
           {view === "week" && (
             <button
-              onClick={() => { setFocus(today); scrolled.current = true; }}
+              onClick={() => goToDate(today)}
               style={{
                 padding: "5px 12px", borderRadius: 7, border: `1px solid ${C.line}`,
                 fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
@@ -1823,7 +1829,7 @@ export default function App() {
       ) : (
         <MonthView
           year={year} cls={cls} subjects={subjects} month={month} setMonth={setMonth} wide={wide} today={today}
-          onPick={(d) => { setFocus(d); setView("week"); scrolled.current = false; }}
+          onPick={(d) => { goToDate(d); setView("week"); }}
         />
       )}
 
