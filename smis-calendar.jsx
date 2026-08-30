@@ -1666,21 +1666,36 @@ export default function App() {
           <button onClick={() => setShowSet(true)} style={{ ...navBtn, fontSize: 15 }}>⚙</button>
         </div>
 
-        <div style={{ display: "flex", gap: 6 }}>
-          {[["week", "周"], ["month", "月"]].map(([k, l]) => (
-            <button
-              key={k}
-              onClick={() => setView(k)}
-              style={{
-                padding: "5px 14px", borderRadius: 7, border: "none", fontSize: 12.5,
-                fontWeight: 650, cursor: "pointer", fontFamily: "inherit",
-                background: view === k ? C.navy : "#DFE5EE",
-                color: view === k ? "#fff" : C.mute,
-              }}
-            >
-              {l}
-            </button>
-          ))}
+        <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
+          <div
+            role="group"
+            style={{
+              display: "flex",
+              gap: 2,
+              padding: 2,
+              border: `1px solid ${C.line}`,
+              background: C.card,
+              borderRadius: 8,
+              boxSizing: "border-box",
+            }}
+          >
+            {[["week", "周"], ["month", "月"]].map(([k, l]) => (
+              <button
+                key={k}
+                onClick={() => setView(k)}
+                aria-pressed={view === k}
+                style={{
+                  padding: "3px 15px", borderRadius: 6, border: "none", fontSize: 12.5,
+                  fontWeight: 650, cursor: "pointer", fontFamily: "inherit",
+                  background: view === k ? C.navy : "transparent",
+                  color: view === k ? "#fff" : C.mute,
+                  transition: "background .12s, color .12s",
+                }}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
           {view === "week" && (
             <button
               onClick={() => goToDate(today)}
