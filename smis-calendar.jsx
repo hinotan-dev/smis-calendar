@@ -19,6 +19,65 @@ const C = {
   dim: "#9AA7B8",
 };
 
+
+/* ---------- 深蓝提醒条上的文字色 ----------
+   主视图是浅底，科目色直接可用；提醒条是深蓝底，同样的色值对比度普遍
+   不到 3:1。这里保持色相与饱和度不变，只沿 HSL 明度轴提亮，直到达到
+   WCAG AA 的 4.5:1。运行时计算，用户改色或新建科目都会自动适配。      */
+
+const hex2rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const relLum = ([r, g, b]) => {
+  const f = (c) => {
+    c /= 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const contrast = (a, b) => {
+  const l1 = relLum(hex2rgb(a));
+  const l2 = relLum(hex2rgb(b));
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+};
+const rgb2hsl = ([r, g, b]) => {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  let h = 0, sat = 0;
+  if (mx !== mn) {
+    const d = mx - mn;
+    sat = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h /= 6;
+  }
+  return [h, sat, l];
+};
+const hsl2hex = (h, sat, l) => {
+  const f = (n) => {
+    const k = (n + h * 12) % 12;
+    const a = sat * Math.min(l, 1 - l);
+    return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)))));
+  };
+  return "#" + [f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+
+const onNavyCache = {};
+function onNavy(hex) {
+  if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return "#fff";
+  if (onNavyCache[hex]) return onNavyCache[hex];
+  let out = hex;
+  try {
+    let [h, sat, l] = rgb2hsl(hex2rgb(hex));
+    for (let i = 0; i < 220 && contrast(out, C.navy) < 4.6; i++) {
+      l = Math.min(0.97, l + 0.005);
+      out = hsl2hex(h, sat, l);
+    }
+  } catch {
+    out = "#fff";
+  }
+  onNavyCache[hex] = out;
+  return out;
+}
+
 /* ---------- 默认数据 ---------- */
 
 const expand = (a, b) => {
@@ -165,10 +224,23 @@ const RPY = {
   ),
 };
 
-const DEFAULT_CLASSES = [RPJ, RPY];
+// RPH 同样只有 P2 的 special 顺序不同
+const RPH = {
+  ...RPJ,
+  id: "RPH",
+  name: "RPH",
+  gradeNoSchool: RPJ.gradeNoSchool.map((g) => ({ ...g })),
+  blocks: RPJ.blocks.map((b) =>
+    b.label === "P2"
+      ? { ...b, subject: { A: "LIB", B: "MUS", C: "ART", D: "PE", E: "MUS", F: "SWIM", G: "ART", H: "PE" } }
+      : { ...b }
+  ),
+};
+
+const DEFAULT_CLASSES = [RPJ, RPY, RPH];
 
 // 递增这个数字，下次载入会补进新增的默认班级/科目，但不覆盖你改过的内容
-const SEED = 6;
+const SEED = 7;
 const LABEL_FIXES = {
   "Back to School Day（仅家长）": "Back to School（仅家长）",
   "Parent Teacher Conference（仅家长）": "PTC（仅家长）",
@@ -591,7 +663,7 @@ function PrepCol({ rec, cls, subjects, today, primary }) {
       {items.length ? (
         items.map((it) => (
           <div key={it.name} style={{ display: "flex", gap: 7, alignItems: "baseline", marginTop: 3 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: it.color, flexShrink: 0 }}>{it.name}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: onNavy(it.color), flexShrink: 0 }}>{it.name}</span>
             <span style={{ fontSize: 12.5, lineHeight: 1.45, minWidth: 0 }}>{it.prep.join(" · ")}</span>
           </div>
         ))
