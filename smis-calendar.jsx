@@ -179,6 +179,8 @@ const LOCALES = {
     alertReadFail: "读取文件失败。",
     alertBadJson: "JSON 格式有误，检查一下括号和引号。",
     footerNote: "非官方工具 · 课表与校历整理自 SMIS 公布的日程，以学校通知为准",
+    appNameShort: "SMIS 课表",
+    appNameLong: "SMIS 课表 26-27",
     getInTouch: "联系我",
     updated: (d) => `更新于 ${d}`,
   },
@@ -271,6 +273,8 @@ const LOCALES = {
     alertReadFail: "Could not read that file.",
     alertBadJson: "Invalid JSON — check the brackets and quotes.",
     footerNote: "Unofficial tool · Schedule compiled from SMIS's published dates",
+    appNameShort: "SMIS Schedule",
+    appNameLong: "SMIS Schedule 26-27",
     getInTouch: "Get in touch",
     updated: (d) => `Updated ${d}`,
   },
@@ -1841,6 +1845,32 @@ export default function App() {
       document.title = `🗓️${cls.name} - SMIS ${yr}`;
     } catch {}
   }, [cls, school]);
+
+  // 加到主屏幕时的名称：iOS 读 apple-mobile-web-app-title，Android 读 manifest。
+  // 两者都在安装那一刻从 DOM 读取，所以切换语言后改写即可生效（已装的图标不会改名）。
+  useEffect(() => {
+    try {
+      const short = T("appNameShort");
+      const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+      if (meta) meta.setAttribute("content", short);
+
+      const link = document.querySelector('link[rel="manifest"]');
+      if (link) {
+        const href = link.getAttribute("href") || "";
+        const comma = href.indexOf(",");
+        if (href.startsWith("data:") && comma > -1) {
+          const obj = JSON.parse(decodeURIComponent(href.slice(comma + 1)));
+          obj.name = T("appNameLong");
+          obj.short_name = short;
+          obj.lang = lang;
+          link.setAttribute(
+            "href",
+            "data:application/manifest+json," + encodeURIComponent(JSON.stringify(obj))
+          );
+        }
+      }
+    } catch {}
+  }, [lang]);
 
   // 横向滚动条放工作日；有活动的周末插入一张合并卡片
   const strip = useMemo(() => {
