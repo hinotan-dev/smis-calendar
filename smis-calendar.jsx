@@ -78,6 +78,237 @@ function onNavy(hex) {
   return out;
 }
 
+
+/* ---------- 多语言 ----------
+   UI 字符串走 T()，数据里的标签走 tx()。数据标签写成 { zh, en } 对象；
+   用户自己输入的内容是普通字符串，tx() 原样返回。
+   加语言只要在 LOCALES 里补一份，并在 LANGS 里登记。            */
+
+// 最后更新日期（构建时自动写入）
+const UPDATED = "2026-09-03";
+
+const LANGS = [
+  { id: "zh", label: "中文" },
+  { id: "en", label: "EN" },
+];
+
+const LOCALES = {
+  zh: {
+    wd: ["日", "一", "二", "三", "四", "五", "六"],
+    wdFull: (i) => "周" + LOCALES.zh.wd[i],
+    wdHead: ["一", "二", "三", "四", "五"],
+    listSep: "、",
+    dateWd: (d) => `${d.getMonth() + 1}/${d.getDate()}（周${LOCALES.zh.wd[d.getDay()]}）`,
+    monthTitle: (y, m) => `${y} 年 ${m + 1} 月`,
+
+    rest: "休",
+    weekend: "周末",
+    weekendEvents: "周末活动",
+    monthWeekendEvents: "本月周末活动",
+    noSchoolWith: (r) => `放假 — ${r}`,
+    gradeOff: "本年级不到校",
+    gradeOffChip: "本年级休",
+    gradeOffNote: (l) => `轮换照常推进，这天仍算 ${l} DAY`,
+    jpHoliday: "日本公共假日",
+
+    today: "今天",
+    tomorrow: "明天",
+    relToday: "今天",
+    relNext: "下次上学",
+    bandHeader: (w, l) => `${w}要带 · ${l} day`,
+    nothingToBring: "没有要特别准备的东西",
+    todayIs: (l) => `今天是 ${l} DAY`,
+    todayOff: "今天不上课",
+    backToToday: "回到今天",
+    viewWeek: "周",
+    viewMonth: "月",
+    previewMode: (d) => `预览模式 · 把 ${d} 当作今天`,
+    exit: "退出",
+    prevPage: "上一页",
+    nextPage: "下一页",
+    loading: "载入中…",
+
+    settings: "设置",
+    language: "语言",
+    tabClasses: "班级",
+    tabSubjects: "科目",
+    tabCalendar: "校历",
+    tabData: "数据",
+
+    newSubjectOpt: "＋ 新科目…",
+    promptNewSubject: "新科目名称（例如 DRAMA）",
+    rotates: "按 A–H 轮换（不勾则每天相同）",
+    promptNewClass: "新班级名称（例如 RPK 或 1A）",
+    alertDupClass: "这个名称已经存在了。",
+    alertKeepOne: "至少要保留一个班级。",
+    confirmDelete: (n) => `删除 ${n}？`,
+    addBlank: "＋ 空白",
+    addCopy: "＋ 复制当前",
+    phClassName: "班级名",
+    phGrade: "年级",
+    showing: "显示中",
+    switchTo: "切到这个",
+    blocksTitle: "课表时段",
+    addBlock: "＋ 加一个时段",
+    gradeOffTitle: "本年级不到校的日子（轮换照常推进）",
+    phReason: "原因",
+    addDay: "＋ 加一天",
+    deleteClass: (n) => `删除 ${n}`,
+
+    phDisplayName: "中文名",
+    markSpecial: "高亮为 special 课",
+    phPrep: "要带的东西，用顿号分隔",
+    subjHint: "改完点一下别处保存。填了物品的科目会出现在顶部提醒条里。",
+
+    rowYear: "学年",
+    rowDays: "上课日",
+    daysValue: (t, c) => `${t} 天（${c} 轮 A–H 循环）`,
+    noSchoolTitle: "不上课日（跳过轮换）",
+    gradeOffSettings: "本年级不到校（轮换照常）",
+
+    dataHint: "这是全部设置的完整备份。下载或复制一份保存起来；换设备、换浏览器、或者明年新学年时，从这里导回去。",
+    editJson: "编辑 JSON",
+    saveOverwrite: "保存并覆盖",
+    cancelRestore: "取消并还原",
+    download: "下载文件",
+    copy: "复制",
+    copied: "已复制",
+    importFile: "导入文件",
+    alertNoDownload: "这个环境不支持下载，可以改用「复制」。",
+    alertCopyFail: "复制失败，可以手动全选文本框里的内容。",
+    alertReadFail: "读取文件失败。",
+    alertBadJson: "JSON 格式有误，检查一下括号和引号。",
+    footerNote: "非官方工具 · 课表与校历整理自 SMIS 公布的日程，以学校通知为准",
+    getInTouch: "联系我",
+    updated: (d) => `更新于 ${d}`,
+  },
+
+  en: {
+    wd: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    wdFull: (i) => LOCALES.en.wd[i],
+    wdHead: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    listSep: ", ",
+    dateWd: (d) => `${LOCALES.en.wd[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`,
+    monthTitle: (y, m) =>
+      `${["January","February","March","April","May","June","July","August","September","October","November","December"][m]} ${y}`,
+
+    rest: "Off",
+    weekend: "Weekend",
+    weekendEvents: "Weekend",
+    monthWeekendEvents: "Weekend events this month",
+    noSchoolWith: (r) => `No school — ${r}`,
+    gradeOff: "Grade not in session",
+    gradeOffChip: "Grade off",
+    gradeOffNote: (l) => `Rotation continues — still ${l} DAY`,
+    jpHoliday: "Japanese public holiday",
+
+    today: "today",
+    tomorrow: "tomorrow",
+    relToday: "Today",
+    relNext: "Next school day",
+    bandHeader: (w, l) => `Bring ${w} · ${l} day`,
+    nothingToBring: "Nothing special to bring",
+    todayIs: (l) => `Today is ${l} DAY`,
+    todayOff: "No school today",
+    backToToday: "Today",
+    viewWeek: "Week",
+    viewMonth: "Month",
+    previewMode: (d) => `Preview — treating ${d} as today`,
+    exit: "Exit",
+    prevPage: "Previous",
+    nextPage: "Next",
+    loading: "Loading…",
+
+    settings: "Settings",
+    language: "Language",
+    tabClasses: "Classes",
+    tabSubjects: "Subjects",
+    tabCalendar: "Calendar",
+    tabData: "Data",
+
+    newSubjectOpt: "＋ New subject…",
+    promptNewSubject: "Subject name (e.g. DRAMA)",
+    rotates: "Rotates A–H (unchecked = same every day)",
+    promptNewClass: "Class name (e.g. RPK or 1A)",
+    alertDupClass: "That name already exists.",
+    alertKeepOne: "Keep at least one class.",
+    confirmDelete: (n) => `Delete ${n}?`,
+    addBlank: "＋ Blank",
+    addCopy: "＋ Duplicate",
+    phClassName: "Class",
+    phGrade: "Grade",
+    showing: "Showing",
+    switchTo: "Switch to",
+    blocksTitle: "Periods",
+    addBlock: "＋ Add period",
+    gradeOffTitle: "Days this grade is off (rotation continues)",
+    phReason: "Reason",
+    addDay: "＋ Add day",
+    deleteClass: (n) => `Delete ${n}`,
+
+    phDisplayName: "Full name",
+    markSpecial: "Highlight as a special",
+    phPrep: "Items to bring, comma separated",
+    subjHint: "Tap elsewhere to save. Subjects with items appear in the reminder bar.",
+
+    rowYear: "School year",
+    rowDays: "School days",
+    daysValue: (t, c) => `${t} days (${c} × A–H cycles)`,
+    noSchoolTitle: "No-school days (skipped in rotation)",
+    gradeOffSettings: "Grade off (rotation continues)",
+
+    dataHint:
+      "A full backup of your settings. Download or copy one to keep; import it here when you switch device, browser, or school year.",
+    editJson: "Edit JSON",
+    saveOverwrite: "Save & overwrite",
+    cancelRestore: "Cancel",
+    download: "Download",
+    copy: "Copy",
+    copied: "Copied",
+    importFile: "Import file",
+    alertNoDownload: "Downloads aren't supported here — use Copy instead.",
+    alertCopyFail: "Copy failed — select the text manually.",
+    alertReadFail: "Could not read that file.",
+    alertBadJson: "Invalid JSON — check the brackets and quotes.",
+    footerNote: "Unofficial tool · Schedule compiled from SMIS's published dates",
+    getInTouch: "Get in touch",
+    updated: (d) => `Updated ${d}`,
+  },
+};
+
+// 当前语言。App 在渲染开头设置，子组件读取，避免层层传 prop。
+let LANG = "zh";
+
+function T(key, ...args) {
+  const dict = LOCALES[LANG] || LOCALES.en;
+  const v = dict[key] !== undefined ? dict[key] : LOCALES.en[key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
+// 数据标签：{ zh, en } 取当前语言；普通字符串（用户自己输入的）原样返回
+function subName(sub) {
+  if (!sub) return "";
+  return sub[LANG] || sub.zh || sub.en || "";
+}
+
+function tx(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  return v[LANG] || v.en || v.zh || "";
+}
+
+function detectLang() {
+  try {
+    const q = new URLSearchParams(window.location.search).get("lang");
+    if (q && LOCALES[q.toLowerCase()]) return q.toLowerCase();
+  } catch {}
+  try {
+    return /^zh/i.test(navigator.language || "") ? "zh" : "en";
+  } catch {
+    return "en";
+  }
+}
+
 /* ---------- 默认数据 ---------- */
 
 const expand = (a, b) => {
@@ -98,53 +329,53 @@ const DEFAULT_SCHOOL = {
   // 锚点即校准点，第一条是学年起点
   calibrations: [{ date: "2026-08-24", letter: "A" }],
   noSchool: [
-    { dates: ["2026-09-21"], label: "Back to School（仅家长）" },
-    { dates: expand("2026-10-12", "2026-10-16"), label: "秋假" },
-    { dates: ["2026-11-03"], label: "PTC（仅家长）" },
-    { dates: ["2026-11-23"], label: "教师培训日" },
-    { dates: ["2026-11-27"], label: "感恩节" },
-    { dates: expand("2026-12-18", "2027-01-05"), label: "圣诞假期" },
-    { dates: ["2027-01-11"], label: "教师培训日" },
-    { dates: ["2027-02-11"], label: "学生主导 PTC" },
-    { dates: ["2027-02-19"], label: "教师培训日" },
-    { dates: expand("2027-02-22", "2027-02-23"), label: "冬假" },
-    { dates: expand("2027-03-22", "2027-03-26"), label: "春假" },
-    { dates: ["2027-05-03"], label: "公共假日" },
-    { dates: ["2027-05-10"], label: "Carnival 补休" },
+    { dates: ["2026-09-21"], label: { zh: "Back to School（仅家长）", en: "Back to School (parents only)" } },
+    { dates: expand("2026-10-12", "2026-10-16"), label: { zh: "秋假", en: "Autumn Break" } },
+    { dates: ["2026-11-03"], label: { zh: "PTC（仅家长）", en: "PTC (parents only)" } },
+    { dates: ["2026-11-23"], label: { zh: "教师培训日", en: "PD Day" } },
+    { dates: ["2026-11-27"], label: { zh: "感恩节", en: "Thanksgiving" } },
+    { dates: expand("2026-12-18", "2027-01-05"), label: { zh: "圣诞假期", en: "Xmas Break" } },
+    { dates: ["2027-01-11"], label: { zh: "教师培训日", en: "PD Day" } },
+    { dates: ["2027-02-11"], label: { zh: "学生主导 PTC", en: "PTC (student-led)" } },
+    { dates: ["2027-02-19"], label: { zh: "教师培训日", en: "PD Day" } },
+    { dates: expand("2027-02-22", "2027-02-23"), label: { zh: "冬假", en: "Winter Break" } },
+    { dates: expand("2027-03-22", "2027-03-26"), label: { zh: "春假", en: "Spring Break" } },
+    { dates: ["2027-05-03"], label: { zh: "公共假日", en: "Public Holiday" } },
+    { dates: ["2027-05-10"], label: { zh: "Carnival 补休", en: "Carnival Recovery" } },
   ],
   // PDF 上带 ✱ 星标的日子
   holidays: [
-    { date: "2026-09-21", label: "敬老の日" },
-    { date: "2026-09-22", label: "国民の休日" },
-    { date: "2026-09-23", label: "秋分の日" },
-    { date: "2026-10-12", label: "スポーツの日" },
-    { date: "2026-11-03", label: "文化の日" },
-    { date: "2026-11-23", label: "勤労感謝の日" },
-    { date: "2027-01-01", label: "元日" },
-    { date: "2027-01-11", label: "成人の日" },
-    { date: "2027-02-11", label: "建国記念の日" },
-    { date: "2027-02-23", label: "天皇誕生日" },
-    { date: "2027-03-20", label: "春分の日" },
-    { date: "2027-04-29", label: "昭和の日" },
-    { date: "2027-05-03", label: "憲法記念日" },
-    { date: "2027-05-04", label: "みどりの日" },
-    { date: "2027-05-05", label: "こどもの日" },
+    { date: "2026-09-21", label: { zh: "敬老の日", en: "Respect for the Aged Day" } },
+    { date: "2026-09-22", label: { zh: "国民の休日", en: "Citizens' Holiday" } },
+    { date: "2026-09-23", label: { zh: "秋分の日", en: "Autumnal Equinox" } },
+    { date: "2026-10-12", label: { zh: "スポーツの日", en: "Sports Day" } },
+    { date: "2026-11-03", label: { zh: "文化の日", en: "Culture Day" } },
+    { date: "2026-11-23", label: { zh: "勤労感謝の日", en: "Labor Thanksgiving" } },
+    { date: "2027-01-01", label: { zh: "元日", en: "New Year's Day" } },
+    { date: "2027-01-11", label: { zh: "成人の日", en: "Coming of Age Day" } },
+    { date: "2027-02-11", label: { zh: "建国記念の日", en: "National Foundation Day" } },
+    { date: "2027-02-23", label: { zh: "天皇誕生日", en: "Emperor's Birthday" } },
+    { date: "2027-03-20", label: { zh: "春分の日", en: "Vernal Equinox" } },
+    { date: "2027-04-29", label: { zh: "昭和の日", en: "Showa Day" } },
+    { date: "2027-05-03", label: { zh: "憲法記念日", en: "Constitution Day" } },
+    { date: "2027-05-04", label: { zh: "みどりの日", en: "Greenery Day" } },
+    { date: "2027-05-05", label: { zh: "こどもの日", en: "Children's Day" } },
   ],
   events: [
-    { date: "2026-08-24", label: "G3–12 开学" },
-    { date: "2026-08-25", label: "RP–G2 开学" },
-    { date: "2026-10-23", label: "Q1 结束" },
+    { date: "2026-08-24", label: { zh: "G3–12 开学", en: "First day G3–12" } },
+    { date: "2026-08-25", label: { zh: "RP–G2 开学", en: "First day RP–G2" } },
+    { date: "2026-10-23", label: { zh: "Q1 结束", en: "End of Q1" } },
     { date: "2026-11-13", label: "Fall Play" },
     { date: "2026-11-14", label: "Fall Play" },
     { date: "2026-11-20", label: "Bingo" },
     { date: "2026-12-05", label: "ES Choral Christmas Concert" },
     { date: "2026-12-06", label: "MS/HS Choral Christmas Concert" },
-    { date: "2026-12-08", label: "St. Mary's Day 庆典" },
+    { date: "2026-12-08", label: { zh: "St. Mary's Day 庆典", en: "St. Mary's Day" } },
     { date: "2026-12-09", label: "Winter Instrumental Concert" },
-    { date: "2027-01-22", label: "Q2 / S1 结束" },
+    { date: "2027-01-22", label: { zh: "Q2 / S1 结束", en: "End of Q2 / S1" } },
     { date: "2027-02-06", label: "Jazz Concert" },
     { date: "2027-02-18", label: "The JAM Show" },
-    { date: "2027-04-02", label: "Q3 结束" },
+    { date: "2027-04-02", label: { zh: "Q3 结束", en: "End of Q3" } },
     { date: "2027-04-09", label: "Spring Musical" },
     { date: "2027-04-10", label: "Spring Musical" },
     { date: "2027-04-11", label: "Spring Musical" },
@@ -152,28 +383,31 @@ const DEFAULT_SCHOOL = {
     { date: "2027-05-08", label: "Carnival" },
     { date: "2027-05-21", label: "Spring Instrumental Concert" },
     { date: "2027-05-27", label: "ES Spring Choral Concert" },
-    { date: "2027-05-29", label: "HS 毕业典礼" },
+    { date: "2027-05-29", label: { zh: "HS 毕业典礼", en: "HS Graduation" } },
     { date: "2027-06-09", label: "ES Sports Day" },
     { date: "2027-06-10", label: "Jazz Nite" },
-    { date: "2027-06-11", label: "最后一天 · 11:30 放学" },
+    { date: "2027-06-11", label: { zh: "最后一天 · 11:30 放学", en: "Last day · 11:30 dismissal" } },
   ],
 };
 
 const DEFAULT_SUBJECTS = {
-  ELA: { zh: "英语语文", color: "#4A6FA5" },
-  MATH: { zh: "数学", color: "#2E8B6F" },
-  "SS/SCI": { zh: "社会 / 科学", color: "#6B8E23" },
-  REL: { zh: "宗教", color: "#8C7B5A" },
-  CORE: { zh: "核心课", color: "#5A6B7B" },
-  JPN: { zh: "日语", color: "#C79A2E" },
-  ART: { zh: "美术", color: "#C2652A", special: true, prep: ["罩衫"] },
-  PE: { zh: "体育", color: "#D93E4A", special: true, prep: ["运动服"] },
-  SWIM: { zh: "游泳", color: "#1E9BC4", special: true, prep: ["泳衣", "泳镜", "浴巾"] },
-  LIB: { zh: "图书馆", color: "#7B5EA7", special: true, prep: ["还书"] },
-  MUS: { zh: "音乐", color: "#B8478E", special: true, prep: [] },
-  "Home Room / Prayer": { zh: "晨会 / 祈祷", color: C.dim, break: true },
-  Recess: { zh: "课间", color: C.dim, break: true },
-  "Lunch / Recess": { zh: "午餐 / 课间", color: C.dim, break: true },
+  ELA: { zh: "英语语文", en: "English", color: "#4A6FA5" },
+  MATH: { zh: "数学", en: "Math", color: "#2E8B6F" },
+  "SS/SCI": { zh: "社会 / 科学", en: "Social / Science", color: "#6B8E23" },
+  REL: { zh: "宗教", en: "Religion", color: "#8C7B5A" },
+  CORE: { zh: "核心课", en: "Core", color: "#5A6B7B" },
+  JPN: { zh: "日语", en: "Japanese", color: "#C79A2E" },
+  ART: { zh: "美术", en: "Art", color: "#C2652A", special: true, prep: [{ zh: "罩衫", en: "Art shirt" }] },
+  PE: { zh: "体育", en: "Physical Education", color: "#D93E4A", special: true, prep: [{ zh: "运动服", en: "PE uniform" }] },
+  SWIM: {
+    zh: "游泳", en: "Swimming", color: "#1E9BC4", special: true,
+    prep: [{ zh: "泳衣", en: "Swimsuit" }, { zh: "泳镜", en: "Goggles" }, { zh: "浴巾", en: "Towel" }],
+  },
+  LIB: { zh: "图书馆", en: "Library", color: "#7B5EA7", special: true, prep: [{ zh: "还书", en: "Return books" }] },
+  MUS: { zh: "音乐", en: "Music", color: "#B8478E", special: true, prep: [] },
+  "Home Room / Prayer": { zh: "晨会 / 祈祷", en: "Homeroom & Prayer", color: C.dim, break: true },
+  Recess: { zh: "课间", en: "Recess", color: C.dim, break: true },
+  "Lunch / Recess": { zh: "午餐 / 课间", en: "Lunch & Recess", color: C.dim, break: true },
 };
 
 const RPJ = {
@@ -181,8 +415,8 @@ const RPJ = {
   name: "RPJ",
   grade: "RP",
   gradeNoSchool: [
-    { date: "2026-08-24", label: "RP–G2 晚一天开学" },
-    { date: "2027-06-07", label: "仅 ES 放假（MS/HS 照常）" },
+    { date: "2026-08-24", label: { zh: "RP–G2 晚一天开学", en: "RP–G2 start one day later" } },
+    { date: "2027-06-07", label: { zh: "仅 ES 放假（MS/HS 照常）", en: "ES only (MS/HS in session)" } },
   ],
   blocks: [
     { label: "HR", start: "8:15", end: "8:30", subject: "Home Room / Prayer" },
@@ -240,17 +474,7 @@ const RPH = {
 const DEFAULT_CLASSES = [RPJ, RPY, RPH];
 
 // 递增这个数字，下次载入会补进新增的默认班级/科目，但不覆盖你改过的内容
-const SEED = 7;
-const LABEL_FIXES = {
-  "Back to School Day（仅家长）": "Back to School（仅家长）",
-  "Parent Teacher Conference（仅家长）": "PTC（仅家长）",
-  "Professional Development Day": "教师培训日",
-  "PD Day": "教师培训日",
-  "宪法纪念日": "公共假日",
-  "Student Led & Parent Teacher Conference": "学生主导 PTC",
-  "Carnival Recovery Day": "Carnival 补休",
-};
-const RETIRED_PREP = { PE: "运动鞋、运动服、水壶", SWIM: "泳衣、泳帽、泳镜、浴巾", LIB: "还上次借的书" };
+const SEED = 9;
 
 /* ---------- 日期工具 ---------- */
 
@@ -442,7 +666,7 @@ function RestChip({ size = 34 }) {
         flexShrink: 0,
       }}
     >
-      休
+      {T("rest")}
     </div>
   );
 }
@@ -485,10 +709,10 @@ function Block({ block, letter, subjects }) {
             marginTop: 1,
           }}
         >
-          {isBreak ? s.zh : name}
+          {isBreak ? subName(s) || name : name}
         </div>
-        {!isBreak && s.zh && (
-          <div style={{ fontSize: 11, color: C.mute, lineHeight: 1.3 }}>{s.zh}</div>
+        {!isBreak && subName(s) && (
+          <div style={{ fontSize: 11, color: C.mute, lineHeight: 1.3 }}>{subName(s)}</div>
         )}
       </div>
     </div>
@@ -528,7 +752,7 @@ function DayCard({ rec, cls, subjects, relLabel, isToday }) {
           <div style={{ fontSize: 15, fontWeight: 650, color: C.navy }}>
             {d.getMonth() + 1}/{d.getDate()}
             <span style={{ fontSize: 12, color: C.mute, marginLeft: 5, fontWeight: 500 }}>
-              周{WD[rec.dow]}
+              {T("wdFull", rec.dow)}
               {rec.holiday && (
                 <span
                   style={{
@@ -561,20 +785,20 @@ function DayCard({ rec, cls, subjects, relLabel, isToday }) {
             lineHeight: 1.4,
           }}
         >
-          {rec.events.join(" · ")}
+          {rec.events.map(tx).join(" · ")}
         </div>
       )}
 
       {off ? (
         <div style={{ fontSize: 12.5, color: C.mute, padding: "10px 2px", lineHeight: 1.5 }}>
-          {rec.kind === "weekend" ? "周末" : `放假 — ${rec.reason}`}
+          {rec.kind === "weekend" ? T("weekend") : T("noSchoolWith", tx(rec.reason))}
         </div>
       ) : classOff ? (
         <div style={{ fontSize: 12.5, color: C.mute, padding: "8px 2px", lineHeight: 1.5 }}>
-          <div style={{ fontWeight: 600, color: C.navy }}>本年级不到校</div>
-          <div style={{ marginTop: 2 }}>{classOff}</div>
+          <div style={{ fontWeight: 600, color: C.navy }}>{T("gradeOff")}</div>
+          <div style={{ marginTop: 2 }}>{tx(classOff)}</div>
           <div style={{ marginTop: 6, fontSize: 11, color: C.dim }}>
-            轮换照常推进，这天仍算 {rec.letter} DAY
+            {T("gradeOffNote", rec.letter)}
           </div>
         </div>
       ) : (
@@ -601,7 +825,7 @@ function WeekendCard({ item, isToday }) {
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 650, color: C.navy }}>周末活动</div>
+          <div style={{ fontSize: 15, fontWeight: 650, color: C.navy }}>{T("weekendEvents")}</div>
         </div>
         <RestChip />
       </div>
@@ -610,7 +834,7 @@ function WeekendCard({ item, isToday }) {
         {item.days.map((d) => (
           <div key={d.date}>
             <div style={{ fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10.5, color: C.mute, marginBottom: 3 }}>
-              {parse(d.date).getMonth() + 1}/{parse(d.date).getDate()} 周{WD[d.dow]}
+              {T("dateWd", parse(d.date))}
             </div>
             {d.events.map((ev, i) => (
               <div
@@ -620,7 +844,7 @@ function WeekendCard({ item, isToday }) {
                   borderRadius: 5, padding: "4px 7px", marginBottom: 3, lineHeight: 1.4,
                 }}
               >
-                {ev}
+                {tx(ev)}
               </div>
             ))}
           </div>
@@ -636,7 +860,7 @@ function PrepCol({ rec, cls, subjects, today, primary }) {
   const tmr = new Date(parse(today));
   tmr.setDate(tmr.getDate() + 1);
   const when =
-    rec.date === today ? "今天" : rec.date === iso(tmr) ? "明天" : `${d.getMonth() + 1}/${d.getDate()}（周${WD[d.getDay()]}）`;
+    rec.date === today ? T("today") : rec.date === iso(tmr) ? T("tomorrow") : T("dateWd", d);
 
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
@@ -657,18 +881,18 @@ function PrepCol({ rec, cls, subjects, today, primary }) {
             <path d="M13.7 21a2 2 0 0 1-3.4 0" />
           </svg>
         )}
-        <span style={{ minWidth: 0 }}>{when}要带 · {rec.letter} day</span>
+        <span style={{ minWidth: 0 }}>{T("bandHeader", when, rec.letter)}</span>
       </div>
 
       {items.length ? (
         items.map((it) => (
           <div key={it.name} style={{ display: "flex", gap: 7, alignItems: "baseline", marginTop: 3 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: onNavy(it.color), flexShrink: 0 }}>{it.name}</span>
-            <span style={{ fontSize: 12.5, lineHeight: 1.45, minWidth: 0 }}>{it.prep.join(" · ")}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.45, minWidth: 0 }}>{it.prep.map(tx).join(" · ")}</span>
           </div>
         ))
       ) : (
-        <div style={{ fontSize: 12.5, lineHeight: 1.45, opacity: 0.72 }}>没有要特别准备的东西</div>
+        <div style={{ fontSize: 12.5, lineHeight: 1.45, opacity: 0.72 }}>{T("nothingToBring")}</div>
       )}
     </div>
   );
@@ -770,7 +994,7 @@ function MonthView({ year, cls, subjects, month, setMonth, onPick, wide, today }
           ‹
         </button>
         <div style={{ fontSize: 15, fontWeight: 650, color: C.navy }}>
-          {month.y} 年 {month.m + 1} 月
+          {T("monthTitle", month.y, month.m)}
         </div>
         <button
           onClick={() => step(1)}
@@ -782,7 +1006,7 @@ function MonthView({ year, cls, subjects, month, setMonth, onPick, wide, today }
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 4, marginBottom: 5 }}>
-        {["一", "二", "三", "四", "五"].map((x) => (
+        {T("wdHead").map((x) => (
           <div key={x} style={{ textAlign: "center", fontSize: 10.5, color: C.mute, fontWeight: 600 }}>
             {x}
           </div>
@@ -843,9 +1067,17 @@ function MonthView({ year, cls, subjects, month, setMonth, onPick, wide, today }
                       >
                         {d.getDate()}
                       </span>
+                      {rec?.holiday && (
+                        <span
+                          style={{
+                            width: 4, height: 4, borderRadius: 4, background: "#D93E4A",
+                            flexShrink: 0, alignSelf: "flex-start", marginTop: 2,
+                          }}
+                        />
+                      )}
                       {key === today && (
                         <span style={{ fontSize: 9, fontWeight: 700, color: C.navy, lineHeight: 1.1 }}>
-                          今天
+                          {T("relToday")}
                         </span>
                       )}
                     </span>
@@ -857,10 +1089,10 @@ function MonthView({ year, cls, subjects, month, setMonth, onPick, wide, today }
                     {specials.map((sp) => (
                       <Chip key={sp.name} bg={sp.color} fg="#fff">{sp.name}</Chip>
                     ))}
-                    {rec?.classOff && <Chip bg="#C6CFDC" fg="#41546E">本年级休</Chip>}
-                    {rec?.kind === "off" && <Chip bg="#CFD8E3" fg="#41546E">{rec.reason}</Chip>}
+                    {rec?.classOff && <Chip bg="#C6CFDC" fg="#41546E">{T("gradeOffChip")}</Chip>}
+                    {rec?.kind === "off" && <Chip bg="#CFD8E3" fg="#41546E">{tx(rec.reason)}</Chip>}
                     {rec?.events?.map((ev, i) => (
-                      <Chip key={i} bg={C.gold + "33"} fg="#8A6410">{ev}</Chip>
+                      <Chip key={i} bg={C.gold + "33"} fg="#8A6410">{tx(ev)}</Chip>
                     ))}
                   </div>
                 </button>
@@ -881,7 +1113,7 @@ function MonthView({ year, cls, subjects, month, setMonth, onPick, wide, today }
           }}
         >
           <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#8A6410", textTransform: "uppercase", marginBottom: 7 }}>
-            本月周末活动
+            {T("monthWeekendEvents")}
           </div>
           {weekendEvents.map((d) => (
             <div key={d.date} style={{ display: "flex", gap: 9, alignItems: "baseline", marginBottom: 5 }}>
@@ -891,10 +1123,10 @@ function MonthView({ year, cls, subjects, month, setMonth, onPick, wide, today }
                   fontSize: 11.5, color: "#A57A18", flexShrink: 0, minWidth: 62,
                 }}
               >
-                {parse(d.date).getMonth() + 1}/{parse(d.date).getDate()} 周{WD[d.dow]}
+                {T("dateWd", parse(d.date))}
               </span>
               <span style={{ fontSize: 12.5, color: "#6E4E08", fontWeight: 550, lineHeight: 1.45 }}>
-                {d.events.join(" · ")}
+                {d.events.map(tx).join(" · ")}
               </span>
             </div>
           ))}
@@ -958,7 +1190,7 @@ function SubjectPick({ value, subjects, onPick, onNew }) {
         <option key={k} value={k}>{k}</option>
       ))}
       {!subjects[value] && <option value={value}>{value}</option>}
-      <option value="__new__">＋ 新科目…</option>
+      <option value="__new__">{T("newSubjectOpt")}</option>
     </select>
   );
 }
@@ -966,7 +1198,7 @@ function SubjectPick({ value, subjects, onPick, onNew }) {
 function BlockRow({ block, subjects, onChange, onRemove, onMove, addSubject }) {
   const rotating = typeof block.subject !== "string";
   const newSubj = (apply) => {
-    const name = window.prompt("新科目名称（例如 DRAMA）");
+    const name = window.prompt(T("promptNewSubject"));
     if (!name) return;
     addSubject(name.trim());
     apply(name.trim());
@@ -1001,7 +1233,7 @@ function BlockRow({ block, subjects, onChange, onRemove, onMove, addSubject }) {
             })
           }
         />
-        按 A–H 轮换（不勾则每天相同）
+        {T("rotates")}
       </label>
 
       {rotating ? (
@@ -1036,10 +1268,10 @@ function ClassEditor({ classes, setClasses, activeId, setActiveId, subjects, add
   const patch = (o) => setClasses(classes.map((c) => (c.id === cls.id ? { ...c, ...o } : c)));
 
   const addClass = (copyFrom) => {
-    const name = window.prompt("新班级名称（例如 RPK 或 1A）");
+    const name = window.prompt(T("promptNewClass"));
     if (!name) return;
     const id = name.trim();
-    if (classes.find((c) => c.id === id)) return alert("这个名称已经存在了。");
+    if (classes.find((c) => c.id === id)) return alert(T("alertDupClass"));
     const base = copyFrom
       ? { ...cls, blocks: JSON.parse(JSON.stringify(cls.blocks)), gradeNoSchool: [...cls.gradeNoSchool] }
       : { grade: "", gradeNoSchool: [], blocks: [{ label: "P1", start: "08:30", end: "10:00", subject: "ELA" }] };
@@ -1048,8 +1280,8 @@ function ClassEditor({ classes, setClasses, activeId, setActiveId, subjects, add
   };
 
   const removeClass = () => {
-    if (classes.length < 2) return alert("至少要保留一个班级。");
-    if (!window.confirm(`删除 ${cls.name}？`)) return;
+    if (classes.length < 2) return alert(T("alertKeepOne"));
+    if (!window.confirm(T("confirmDelete", cls.name))) return;
     const rest = classes.filter((c) => c.id !== cls.id);
     setClasses(rest);
     setEditId(rest[0].id);
@@ -1081,22 +1313,22 @@ function ClassEditor({ classes, setClasses, activeId, setActiveId, subjects, add
             {c.name}
           </button>
         ))}
-        <button onClick={() => addClass(false)} style={{ ...btnS, color: C.mute }}>＋ 空白</button>
-        <button onClick={() => addClass(true)} style={{ ...btnS, color: C.mute }}>＋ 复制当前</button>
+        <button onClick={() => addClass(false)} style={{ ...btnS, color: C.mute }}>{T("addBlank")}</button>
+        <button onClick={() => addClass(true)} style={{ ...btnS, color: C.mute }}>{T("addCopy")}</button>
       </div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-        <input value={cls.name} onChange={(e) => patch({ name: e.target.value })} placeholder="班级名" style={{ ...inp, flex: 2, minWidth: 0 }} />
-        <input value={cls.grade} onChange={(e) => patch({ grade: e.target.value })} placeholder="年级" style={{ ...inp, flex: 1, minWidth: 0 }} />
+        <input value={cls.name} onChange={(e) => patch({ name: e.target.value })} placeholder={T("phClassName")} style={{ ...inp, flex: 2, minWidth: 0 }} />
+        <input value={cls.grade} onChange={(e) => patch({ grade: e.target.value })} placeholder={T("phGrade")} style={{ ...inp, flex: 1, minWidth: 0 }} />
         <button
           onClick={() => { setActiveId(cls.id); }}
           style={{ ...btnS, background: activeId === cls.id ? "#DFE5EE" : C.card, whiteSpace: "nowrap" }}
         >
-          {activeId === cls.id ? "显示中" : "切到这个"}
+          {activeId === cls.id ? T("showing") : T("switchTo")}
         </button>
       </div>
 
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.mute, marginBottom: 6 }}>课表时段</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.mute, marginBottom: 6 }}>{T("blocksTitle")}</div>
       {cls.blocks.map((b, i) => (
         <BlockRow
           key={i}
@@ -1112,11 +1344,11 @@ function ClassEditor({ classes, setClasses, activeId, setActiveId, subjects, add
         onClick={() => patch({ blocks: [...cls.blocks, { label: "", start: "15:15", end: "16:00", subject: "ELA" }] })}
         style={{ ...btnS, width: "100%", padding: "9px" }}
       >
-        ＋ 加一个时段
+        {T("addBlock")}
       </button>
 
       <div style={{ fontSize: 12, fontWeight: 700, color: C.mute, margin: "16px 0 6px" }}>
-        本年级不到校的日子（轮换照常推进）
+        {T("gradeOffTitle")}
       </div>
       {cls.gradeNoSchool.map((g, i) => (
         <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6 }}>
@@ -1127,9 +1359,9 @@ function ClassEditor({ classes, setClasses, activeId, setActiveId, subjects, add
             style={{ ...inp, flex: 1, minWidth: 0 }}
           />
           <input
-            value={g.label}
+            value={tx(g.label)}
             onChange={(e) => patch({ gradeNoSchool: cls.gradeNoSchool.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
-            placeholder="原因"
+            placeholder={T("phReason")}
             style={{ ...inp, flex: 1.3, minWidth: 0 }}
           />
           <button onClick={() => patch({ gradeNoSchool: cls.gradeNoSchool.filter((_, j) => j !== i) })} style={{ ...btnS, color: "#C0392B" }}>✕</button>
@@ -1139,17 +1371,17 @@ function ClassEditor({ classes, setClasses, activeId, setActiveId, subjects, add
         onClick={() => patch({ gradeNoSchool: [...cls.gradeNoSchool, { date: "", label: "" }] })}
         style={{ ...btnS, width: "100%", padding: "9px" }}
       >
-        ＋ 加一天
+        {T("addDay")}
       </button>
 
       <button onClick={removeClass} style={{ ...btnS, width: "100%", padding: "9px", marginTop: 16, color: "#C0392B" }}>
-        删除 {cls.name}
+        {T("deleteClass", cls.name)}
       </button>
     </div>
   );
 }
 
-function Settings({ school, subjects, setSubjects, classes, setClasses, activeId, setActiveId, year, cls, onClose, onReset, wide }) {
+function Settings({ school, subjects, setSubjects, classes, setClasses, activeId, setActiveId, year, cls, onClose, onReset, wide, lang, setLang }) {
   const [tab, setTab] = useState("cls");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -1186,7 +1418,7 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch {
-      alert("这个环境不支持下载，可以改用「复制」。");
+      alert(T("alertNoDownload"));
     }
   };
 
@@ -1196,7 +1428,7 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      alert("复制失败，可以手动全选文本框里的内容。");
+      alert(T("alertCopyFail"));
     }
   };
 
@@ -1228,12 +1460,36 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
         }}
       >
         <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.line}`, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 15, fontWeight: 650, color: C.navy, flex: 1 }}>设置</div>
+          <div style={{ fontSize: 15, fontWeight: 650, color: C.navy, flex: 1 }}>{T("settings")}</div>
+          <div
+            role="group"
+            aria-label={T("language")}
+            style={{
+              display: "flex", gap: 2, padding: 2, border: `1px solid ${C.line}`,
+              background: C.card, borderRadius: 8, boxSizing: "border-box",
+            }}
+          >
+            {LANGS.map((x) => (
+              <button
+                key={x.id}
+                onClick={() => setLang(x.id)}
+                aria-pressed={lang === x.id}
+                style={{
+                  padding: "3px 10px", borderRadius: 6, border: "none", fontSize: 12,
+                  fontWeight: 650, cursor: "pointer", fontFamily: "inherit",
+                  background: lang === x.id ? C.navy : "transparent",
+                  color: lang === x.id ? "#fff" : C.mute,
+                }}
+              >
+                {x.label}
+              </button>
+            ))}
+          </div>
           <button onClick={onClose} style={{ ...navBtn, width: 30, height: 30, fontSize: 15 }}>✕</button>
         </div>
 
         <div style={{ display: "flex", gap: 6, padding: "10px 14px 0" }}>
-          {[["cls", "班级"], ["subj", "科目"], ["cal", "校历"], ["data", "数据"]].map(([k, l]) => (
+          {[["cls", T("tabClasses")], ["subj", T("tabSubjects")], ["cal", T("tabCalendar")], ["data", T("tabData")]].map(([k, l]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -1279,9 +1535,9 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
                     />
                     <span style={{ fontSize: 13.5, fontWeight: 650, color: C.navy }}>{name}</span>
                     <input
-                      defaultValue={s.zh || ""}
-                      onBlur={(e) => setSubjects({ ...subjects, [name]: { ...s, zh: e.target.value } })}
-                      placeholder="中文名"
+                      defaultValue={subName(s)}
+                      onBlur={(e) => setSubjects({ ...subjects, [name]: { ...s, [LANG]: e.target.value } })}
+                      placeholder={T("phDisplayName")}
                       style={{ ...inp, flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12 }}
                     />
                   </div>
@@ -1291,18 +1547,18 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
                       checked={!!s.special}
                       onChange={(e) => setSubjects({ ...subjects, [name]: { ...s, special: e.target.checked } })}
                     />
-                    高亮为 special 课
+                    {T("markSpecial")}
                   </label>
                   <input
-                    defaultValue={(s.prep || []).join("、")}
+                    defaultValue={(s.prep || []).map(tx).join(T("listSep"))}
                     onBlur={(e) => editPrep(name, e.target.value)}
-                    placeholder="要带的东西，用顿号分隔"
+                    placeholder={T("phPrep")}
                     style={{ ...inp, width: "100%" }}
                   />
                 </div>
               ))}
               <p style={{ fontSize: 11.5, color: C.mute, lineHeight: 1.6, margin: 0 }}>
-                改完点一下别处保存。填了物品的科目会出现在顶部提醒条里。
+                {T("subjHint")}
               </p>
             </div>
           )}
@@ -1310,28 +1566,28 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
           {tab === "cal" && (
             <div style={{ fontSize: 13, color: C.navy, lineHeight: 1.7 }}>
               <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 9, padding: 11, marginBottom: 10 }}>
-                <Row k="学年" v={`${school.yearStart} → ${school.yearEnd}`} />
-                <Row k="上课日" v={`${total} 天（${Math.round(total / 8)} 轮 A–H 循环）`} />
+                <Row k={T("rowYear")} v={`${school.yearStart} → ${school.yearEnd}`} />
+                <Row k={T("rowDays")} v={T("daysValue", total, Math.round(total / 8))} />
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.mute, margin: "0 0 6px" }}>不上课日（跳过轮换）</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.mute, margin: "0 0 6px" }}>{T("noSchoolTitle")}</div>
               <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 9, padding: 11 }}>
                 {school.noSchool.map((g, i) => (
                   <div key={i} style={{ fontSize: 12, marginBottom: 4, display: "flex", gap: 8 }}>
                     <span style={{ fontFamily: "'IBM Plex Mono', monospace", color: C.mute, flexShrink: 0 }}>
                       {g.dates.length > 1 ? `${g.dates[0]}~${g.dates[g.dates.length - 1]}` : g.dates[0]}
                     </span>
-                    <span>{g.label}</span>
+                    <span>{tx(g.label)}</span>
                   </div>
                 ))}
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.mute, margin: "12px 0 6px" }}>
-                本年级不到校（轮换照常）
+                {T("gradeOffSettings")}
               </div>
               <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 9, padding: 11 }}>
                 {cls.gradeNoSchool.map((g, i) => (
                   <div key={i} style={{ fontSize: 12, marginBottom: 4, display: "flex", gap: 8 }}>
                     <span style={{ fontFamily: "'IBM Plex Mono', monospace", color: C.mute, flexShrink: 0 }}>{g.date}</span>
-                    <span>{g.label}</span>
+                    <span>{tx(g.label)}</span>
                   </div>
                 ))}
               </div>
@@ -1341,7 +1597,7 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
           {tab === "data" && (
             <div>
               <p style={{ fontSize: 12.5, color: C.mute, lineHeight: 1.6, marginTop: 0 }}>
-                这是全部设置的完整备份。下载或复制一份保存起来；换设备、换浏览器、或者明年新学年时，从这里导回去。
+                {T("dataHint")}
               </p>
 
               <textarea
@@ -1368,10 +1624,10 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
               {editing ? (
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                   <button onClick={() => onReset(draft)} style={{ ...bigBtn, background: C.navy, color: "#fff", border: "none" }}>
-                    保存并覆盖
+                    {T("saveOverwrite")}
                   </button>
                   <button onClick={() => { setDraft(dump); setEditing(false); }} style={bigBtn}>
-                    取消并还原
+                    {T("cancelRestore")}
                   </button>
                 </div>
               ) : (
@@ -1380,12 +1636,12 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
                     onClick={() => { setDraft(dump); setEditing(true); }}
                     style={{ ...bigBtn, background: C.navy, color: "#fff", border: "none", width: "100%", marginTop: 10 }}
                   >
-                    编辑 JSON
+                    {T("editJson")}
                   </button>
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button onClick={download} style={{ ...bigBtn, fontSize: 12.5 }}>下载文件</button>
-                    <button onClick={copy} style={{ ...bigBtn, fontSize: 12.5 }}>{copied ? "已复制" : "复制"}</button>
-                    <button onClick={() => fileRef.current?.click()} style={{ ...bigBtn, fontSize: 12.5 }}>导入文件</button>
+                    <button onClick={download} style={{ ...bigBtn, fontSize: 12.5 }}>{T("download")}</button>
+                    <button onClick={copy} style={{ ...bigBtn, fontSize: 12.5 }}>{copied ? T("copied") : T("copy")}</button>
+                    <button onClick={() => fileRef.current?.click()} style={{ ...bigBtn, fontSize: 12.5 }}>{T("importFile")}</button>
                   </div>
                   <input
                     ref={fileRef}
@@ -1397,7 +1653,7 @@ function Settings({ school, subjects, setSubjects, classes, setClasses, activeId
                       if (!f) return;
                       const r = new FileReader();
                       r.onload = () => onReset(String(r.result));
-                      r.onerror = () => alert("读取文件失败。");
+                      r.onerror = () => alert(T("alertReadFail"));
                       r.readAsText(f);
                       e.target.value = "";
                     }}
@@ -1433,6 +1689,34 @@ const Row = ({ k, v }) => (
   </div>
 );
 
+function Footer() {
+  return (
+    <div
+      style={{
+        marginTop: 18,
+        paddingTop: 12,
+        borderTop: `1px solid ${C.line}`,
+        textAlign: "center",
+        fontSize: 11,
+        color: C.dim,
+        lineHeight: 1.7,
+      }}
+    >
+      <div>{T("footerNote")}</div>
+      <div>
+        Made by Ellen (RPJ Leo&apos;s mom) ·{" "}
+        <a
+          href="mailto:hinotan@gmail.com"
+          style={{ color: C.mute, textDecoration: "underline" }}
+        >
+          {T("getInTouch")}
+        </a>
+      </div>
+      <div style={{ fontSize: 10.5, opacity: 0.8, marginTop: 2 }}>{T("updated", UPDATED)}</div>
+    </div>
+  );
+}
+
 /* ---------- 主体 ---------- */
 
 export default function App() {
@@ -1444,6 +1728,7 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [, setSeeded] = useState(false);
   const [showSet, setShowSet] = useState(false);
+  const [lang, setLang] = useState(() => detectLang());
   const fakeToday = useMemo(() => overrideToday(), []);
   const [focus, setFocus] = useState(() => overrideToday() || todayISO());
   const [jump, setJump] = useState(0);
@@ -1472,24 +1757,34 @@ export default function App() {
       let cs = c && c.length ? c : DEFAULT_CLASSES;
       let sj = sub || DEFAULT_SUBJECTS;
       if (ui?.seed !== SEED) {
-        // 只把已知的旧标签换成简写，你自己写的标签不动
-        sc = {
-          ...sc,
-          holidays: sc.holidays && sc.holidays.length ? sc.holidays : DEFAULT_SCHOOL.holidays,
-          noSchool: sc.noSchool.map((g) => (LABEL_FIXES[g.label] ? { ...g, label: LABEL_FIXES[g.label] } : g)),
-        };
-        // 只补不覆盖：加进缺少的默认班级和科目
+        // 内置日历没有对用户开放编辑，检测到旧的字符串标签就整体换成双语版
+        // 校历没有对用户开放编辑入口，版本变化时整体以代码为准
+        sc = DEFAULT_SCHOOL;
+
         DEFAULT_CLASSES.forEach((d) => {
           if (!cs.find((x) => x.id === d.id)) cs = [...cs, d];
         });
-        Object.entries(DEFAULT_SUBJECTS).forEach(([k, v]) => {
-          if (!sj[k]) sj = { ...sj, [k]: v };
+        // 内置班级的「本年级不到校」标签同样升级；用户自建的班不动
+        cs = cs.map((c) => {
+          const def = DEFAULT_CLASSES.find((d) => d.id === c.id);
+          if (!def) return c;
+          const old = typeof ((c.gradeNoSchool || [])[0] || {}).label === "string";
+          return old ? { ...c, gradeNoSchool: def.gradeNoSchool } : c;
         });
-        // 准备物品只在你没改过的情况下更新
-        Object.entries(RETIRED_PREP).forEach(([k, oldVal]) => {
-          if (sj[k] && (sj[k].prep || []).join("、") === oldVal) {
-            sj = { ...sj, [k]: { ...sj[k], prep: DEFAULT_SUBJECTS[k].prep } };
+
+        Object.entries(DEFAULT_SUBJECTS).forEach(([k, v]) => {
+          if (!sj[k]) {
+            sj = { ...sj, [k]: v };
+            return;
           }
+          const cur = sj[k];
+          const merged = { ...cur };
+          if (!merged.en && v.en) merged.en = v.en;
+          // 用户没改过的准备物品才换成双语版
+          // 用中文内容判断用户是否改过；没改过就换成最新的默认值（可能补了译文）
+          const zhOf = (arr) => (arr || []).map((x) => (typeof x === "string" ? x : x.zh || x.en || "")).join("、");
+          if (zhOf(cur.prep) === zhOf(v.prep)) merged.prep = v.prep;
+          sj = { ...sj, [k]: merged };
         });
       }
       setSchool(sc);
@@ -1498,6 +1793,11 @@ export default function App() {
       const fromUrl = urlClass && cs.find((x) => x.id.toLowerCase() === urlClass.trim().toLowerCase());
       if (fromUrl) setActiveId(fromUrl.id);
       else if (ui?.activeId && cs.find((x) => x.id === ui.activeId)) setActiveId(ui.activeId);
+      // 语言优先级：URL ?lang= > 本地记录 > 浏览器语言
+      try {
+        const q = new URLSearchParams(window.location.search).get("lang");
+        if (!(q && LOCALES[q.toLowerCase()]) && ui?.lang && LOCALES[ui.lang]) setLang(ui.lang);
+      } catch {}
       setSeeded(true);
       setReady(true);
     })();
@@ -1506,19 +1806,28 @@ export default function App() {
   useEffect(() => { if (ready) store.set(KEY.subjects, subjects); }, [subjects, ready]);
   useEffect(() => { if (ready) store.set(KEY.classes, classes); }, [classes, ready]);
   useEffect(() => { if (ready) store.set(KEY.school, school); }, [school, ready]);
-  useEffect(() => { if (ready) store.set(KEY.ui, { activeId, seed: SEED }); }, [activeId, ready]);
+  useEffect(() => { if (ready) store.set(KEY.ui, { activeId, lang, seed: SEED }); }, [activeId, lang, ready]);
 
   // 把当前班级写回 URL，方便分享和收藏
   useEffect(() => {
     if (!ready) return;
     try {
       const u = new URL(window.location.href);
+      let changed = false;
       if (u.searchParams.get("class") !== activeId) {
         u.searchParams.set("class", activeId);
-        window.history.replaceState(null, "", u.toString());
+        changed = true;
       }
+      if (u.searchParams.get("lang") !== lang) {
+        u.searchParams.set("lang", lang);
+        changed = true;
+      }
+      if (changed) window.history.replaceState(null, "", u.toString());
     } catch {}
-  }, [activeId, ready]);
+  }, [activeId, lang, ready]);
+
+  // 渲染开头设定当前语言，子组件通过 T() / tx() 读取，不必层层传 prop
+  LANG = lang;
 
   const year = useMemo(() => buildYear(school), [school]);
   const cls = classes.find((c) => c.id === activeId) || classes[0];
@@ -1694,14 +2003,14 @@ export default function App() {
       }
       setShowSet(false);
     } catch {
-      alert("JSON 格式有误，检查一下括号和引号。");
+      alert(T("alertBadJson"));
     }
   };
 
   if (!ready) {
     return (
       <div style={{ ...shell, maxWidth: 560, alignItems: "center", justifyContent: "center", display: "flex", color: C.mute, fontSize: 13 }}>
-        载入中…
+        {T("loading")}
       </div>
     );
   }
@@ -1728,10 +2037,10 @@ export default function App() {
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.navy, lineHeight: 1.2 }}>
-              {inYear && todayRec?.kind === "school" ? `今天是 ${todayRec.letter} DAY` : "今天不上课"}
+              {inYear && todayRec?.kind === "school" ? T("todayIs", todayRec.letter) : T("todayOff")}
             </div>
             <div style={{ fontSize: 11.5, color: C.mute }}>
-              {parse(today).getMonth() + 1}/{parse(today).getDate()} 周{WD[parse(today).getDay()]} · {cls.name}
+              {T("dateWd", parse(today))} · {cls.name}
             </div>
           </div>
           <button onClick={() => setShowSet(true)} style={{ ...navBtn, fontSize: 15 }}>⚙</button>
@@ -1750,7 +2059,7 @@ export default function App() {
               boxSizing: "border-box",
             }}
           >
-            {[["week", "周"], ["month", "月"]].map(([k, l]) => (
+            {[["week", T("viewWeek")], ["month", T("viewMonth")]].map(([k, l]) => (
               <button
                 key={k}
                 onClick={() => setView(k)}
@@ -1776,7 +2085,7 @@ export default function App() {
                 background: C.card, color: C.navy, marginLeft: "auto",
               }}
             >
-              回到今天
+              {T("backToToday")}
             </button>
           )}
           {classes.length > 1 ? (
@@ -1817,7 +2126,7 @@ export default function App() {
           }}
         >
           <span style={{ flex: 1, minWidth: 0 }}>
-            预览模式 · 把 {fakeToday} 当作今天
+            {T("previewMode", fakeToday)}
           </span>
           <button
             onClick={() => {
@@ -1833,7 +2142,7 @@ export default function App() {
               cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
             }}
           >
-            退出
+            {T("exit")}
           </button>
         </div>
       )}
@@ -1843,7 +2152,7 @@ export default function App() {
       {view === "week" ? (
         <div style={{ display: "flex", alignItems: "stretch", gap: 8 }}>
           {wide && (
-            <button onClick={() => gotoPage(-1)} style={arrowBtn} aria-label="上一页">‹</button>
+            <button onClick={() => gotoPage(-1)} style={arrowBtn} aria-label={T("prevPage")}>‹</button>
           )}
           <div
             ref={stripRef}
@@ -1872,8 +2181,8 @@ export default function App() {
             }
             const rec = dayForClass(raw, cls);
             const rel =
-              rec.date === today ? "今天" :
-              nextDay && rec.date === nextDay.date && rec.date > today ? "下次上学" : null;
+              rec.date === today ? T("relToday") :
+              nextDay && rec.date === nextDay.date && rec.date > today ? T("relNext") : null;
             return (
               <div
                 key={rec.date}
@@ -1891,16 +2200,22 @@ export default function App() {
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
+                      alignItems: "flex-start",
                       gap: 5,
                       marginTop: 6,
                       fontSize: 10.5,
                       color: C.mute,
+                      lineHeight: 1.45,
                     }}
                   >
-                    <span style={{ width: 5, height: 5, borderRadius: 5, background: "#D93E4A", flexShrink: 0 }} />
-                    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      日本公共假日 · {rec.holiday}
+                    <span
+                      style={{
+                        width: 5, height: 5, borderRadius: 5, background: "#D93E4A",
+                        flexShrink: 0, marginTop: 4,
+                      }}
+                    />
+                    <span style={{ minWidth: 0 }}>
+                      {T("jpHoliday")} · {tx(rec.holiday)}
                     </span>
                   </div>
                 )}
@@ -1909,7 +2224,7 @@ export default function App() {
             })}
           </div>
           {wide && (
-            <button onClick={() => gotoPage(1)} style={arrowBtn} aria-label="下一页">›</button>
+            <button onClick={() => gotoPage(1)} style={arrowBtn} aria-label={T("nextPage")}>›</button>
           )}
         </div>
       ) : (
@@ -1919,12 +2234,15 @@ export default function App() {
         />
       )}
 
+      <Footer />
+
       {showSet && (
         <Settings
           school={school} subjects={subjects} setSubjects={setSubjects}
           classes={classes} setClasses={setClasses}
           activeId={activeId} setActiveId={setActiveId} year={year} cls={cls}
           onClose={() => setShowSet(false)} onReset={importJSON} wide={wide}
+          lang={lang} setLang={setLang}
         />
       )}
     </div>
