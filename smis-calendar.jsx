@@ -347,6 +347,12 @@ const DEFAULT_SCHOOL = {
     { dates: ["2027-05-03"], label: { zh: "公共假日", en: "Public Holiday" } },
     { dates: ["2027-05-10"], label: { zh: "Carnival 补休", en: "Carnival Recovery" } },
   ],
+  // 按星期固定的提醒，与 A–H 轮换无关。dow：0=周日 … 5=周五
+  // note = 卡片上的金色横条（可省略）；items = 提醒条里要带的东西（可省略）
+  weekly: [
+    { dow: 5, note: "Titans Friday", items: [{ zh: "Titans上衣", en: "Titans shirt" }] },
+  ],
+
   // PDF 上带 ✱ 星标的日子
   holidays: [
     { date: "2026-09-21", label: { zh: "敬老の日", en: "Respect for the Aged Day" } },
@@ -478,7 +484,7 @@ const RPH = {
 const DEFAULT_CLASSES = [RPJ, RPY, RPH];
 
 // 递增这个数字，下次载入会补进新增的默认班级/科目，但不覆盖你改过的内容
-const SEED = 9;
+const SEED = 11;
 
 /* ---------- 日期工具 ---------- */
 
@@ -560,6 +566,12 @@ function dayForClass(rec, cls) {
   if (!rec) return null;
   const skip = cls.gradeNoSchool.find((g) => g.date === rec.date);
   return { ...rec, classOff: skip ? skip.label : null };
+}
+
+function weeklyFor(rec, school) {
+  if (!rec || rec.kind !== "school" || rec.classOff) return [];
+  const dow = parse(rec.date).getDay();
+  return (school.weekly || []).filter((w) => w.dow === dow);
 }
 
 function prepFor(rec, cls, subjects) {
@@ -723,7 +735,7 @@ function Block({ block, letter, subjects }) {
   );
 }
 
-function DayCard({ rec, cls, subjects, relLabel, isToday }) {
+function DayCard({ rec, cls, subjects, school, relLabel, isToday }) {
   const d = parse(rec.date);
   const off = rec.kind !== "school";
   const classOff = rec.classOff;
@@ -793,6 +805,25 @@ function DayCard({ rec, cls, subjects, relLabel, isToday }) {
         </div>
       )}
 
+      {weeklyFor(rec, school)
+        .filter((w) => w.note)
+        .map((w, i) => (
+          <div
+            key={i}
+            style={{
+              fontSize: 11,
+              color: "#8A6410",
+              background: C.gold + "22",
+              borderRadius: 5,
+              padding: "4px 7px",
+              marginBottom: 8,
+              lineHeight: 1.4,
+            }}
+          >
+            {tx(w.note)}
+          </div>
+        ))}
+
       {off ? (
         <div style={{ fontSize: 12.5, color: C.mute, padding: "10px 2px", lineHeight: 1.5 }}>
           {rec.kind === "weekend" ? T("weekend") : T("noSchoolWith", tx(rec.reason))}
@@ -858,8 +889,16 @@ function WeekendCard({ item, isToday }) {
   );
 }
 
-function PrepCol({ rec, cls, subjects, today, primary }) {
+function PrepCol({ rec, cls, subjects, school, today, primary }) {
   const items = prepFor(rec, cls, subjects);
+  const extras = weeklyFor(rec, school).filter((w) => w.items && w.items.length);
+  // 接在最后一行物品后面，不另起带星期标注的一行
+  const extraSpans = extras.map((w, i) => (
+    <span key={i}>
+      {i || items.length ? " · " : ""}
+      {w.items.map(tx).join(" · ")}
+    </span>
+  ));
   const d = parse(rec.date);
   const tmr = new Date(parse(today));
   tmr.setDate(tmr.getDate() + 1);
@@ -889,12 +928,17 @@ function PrepCol({ rec, cls, subjects, today, primary }) {
       </div>
 
       {items.length ? (
-        items.map((it) => (
+        items.map((it, idx) => (
           <div key={it.name} style={{ display: "flex", gap: 7, alignItems: "baseline", marginTop: 3 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: onNavy(it.color), flexShrink: 0 }}>{it.name}</span>
-            <span style={{ fontSize: 12.5, lineHeight: 1.45, minWidth: 0 }}>{it.prep.map(tx).join(" · ")}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.45, minWidth: 0 }}>
+              {it.prep.map(tx).join(" · ")}
+              {idx === items.length - 1 ? extraSpans : null}
+            </span>
           </div>
         ))
+      ) : extras.length ? (
+        <div style={{ fontSize: 12.5, lineHeight: 1.45, marginTop: 3 }}>{extraSpans}</div>
       ) : (
         <div style={{ fontSize: 12.5, lineHeight: 1.45, opacity: 0.72 }}>{T("nothingToBring")}</div>
       )}
@@ -902,14 +946,14 @@ function PrepCol({ rec, cls, subjects, today, primary }) {
   );
 }
 
-function PrepBanner({ rec, next, cls, subjects, today }) {
+function PrepBanner({ rec, next, cls, subjects, school, today }) {
   if (!rec || rec.classOff) return null;
   return (
     <div style={{ background: C.navy, borderRadius: 10, padding: "10px 12px", color: "#fff", marginBottom: 10, display: "flex", gap: 12 }}>
-      <PrepCol rec={rec} cls={cls} subjects={subjects} today={today} primary />
+      <PrepCol rec={rec} cls={cls} subjects={subjects} school={school} today={today} primary />
       {next && (
         <div style={{ flex: 1, minWidth: 0, display: "flex", borderLeft: "1px solid rgba(255,255,255,.18)", paddingLeft: 12 }}>
-          <PrepCol rec={next} cls={cls} subjects={subjects} today={today} />
+          <PrepCol rec={next} cls={cls} subjects={subjects} school={school} today={today} />
         </div>
       )}
     </div>
@@ -2177,7 +2221,7 @@ export default function App() {
         </div>
       )}
 
-      <PrepBanner rec={nextDay} next={dayAfter} cls={cls} subjects={subjects} today={today} />
+      <PrepBanner rec={nextDay} next={dayAfter} cls={cls} subjects={subjects} school={school} today={today} />
 
       {view === "week" ? (
         <div style={{ display: "flex", alignItems: "stretch", gap: 8 }}>
@@ -2225,7 +2269,7 @@ export default function App() {
                   paddingLeft: !wide && rec.dow === 1 ? 6 : 0,
                 }}
               >
-                <DayCard rec={rec} cls={cls} subjects={subjects} relLabel={rel} isToday={rec.date === highlightDate} />
+                <DayCard rec={rec} cls={cls} subjects={subjects} school={school} relLabel={rel} isToday={rec.date === highlightDate} />
                 {rec.holiday && (
                   <div
                     style={{
